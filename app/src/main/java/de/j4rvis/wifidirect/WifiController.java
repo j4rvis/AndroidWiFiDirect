@@ -4,13 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
-import android.os.Handler;
 import android.util.Log;
-import android.widget.ListView;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,32 +16,24 @@ import java.util.Map;
  * Created by micha on 22.12.15.
  */
 public class WifiController implements
-        WifiP2pManager.PeerListListener,
         WifiP2pManager.DnsSdTxtRecordListener,
-        WifiP2pManager.DnsSdServiceResponseListener,
-        Runnable {
+        WifiP2pManager.DnsSdServiceResponseListener {
 
     public final static int DISCOVERING = 0;
     public final static int STOPPED = 1;
     public final static int INITIALIZED = 2;
-    private final int SCANINTERVAL = 2000;
+
     private MainActivity mActivity;
     private int mState;
     private Context mContext;
     private boolean mServiceIsRegistered = false;
-
-    final static String TAG = MainActivity.class.getName();
-    final static int SERVER_PORT = 4545;
+    private final static String TAG = MainActivity.class.getName();
+    private final static int SERVER_PORT = 4545;
 
     WifiP2pManager mManager;
     WifiP2pManager.Channel mChannel;
     BroadcastReceiver mReceiver;
     IntentFilter mIntentFilter;
-    WifiActionListener mActionListener;
-    ListView mPeerListView;
-    PeerAdapter mPeerAdapter;
-    WifiP2pDeviceList mPeers;
-    Handler mHandler;
 
     final HashMap<String, String> buddies = new HashMap<String, String>();
     WifiP2pManager.DnsSdTxtRecordListener mTxtListener;
@@ -57,8 +46,6 @@ public class WifiController implements
         mActivity = activity;
         mState = INITIALIZED;
 
-        mHandler = new Handler();
-        mActionListener = new WifiActionListener(mContext);
         mManager = (WifiP2pManager) mContext.getSystemService(Context.WIFI_P2P_SERVICE);
         mChannel = mManager.initialize(mContext, mContext.getMainLooper(), null);
         mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, mActivity);
@@ -79,7 +66,7 @@ public class WifiController implements
         WifiP2pDnsSdServiceInfo serviceInfo =
                 WifiP2pDnsSdServiceInfo.newInstance("_shark", "_presence._tcp", record);
 
-        mManager.addLocalService(mChannel, serviceInfo, new WifiActionListener(mContext));
+        mManager.addLocalService(mChannel, serviceInfo, new WifiActionListener("Add Local Service"));
 
         mManager.setDnsSdResponseListeners(mChannel, this, this);
         serviceRequest = WifiP2pDnsSdServiceRequest.newInstance();
@@ -88,26 +75,25 @@ public class WifiController implements
         Log.d(TAG, "Registration finished.");
     }
 
-    public void startDisccovering(){
+    public void startDiscovering(){
         if(mServiceIsRegistered){
-            mManager.addServiceRequest(mChannel, serviceRequest, new WifiActionListener(mContext));
-            mManager.discoverServices(mChannel, new WifiActionListener(mContext));
+            mManager.addServiceRequest(
+                    mChannel, serviceRequest, new WifiActionListener("Add service request"));
+            mManager.discoverServices(mChannel, new WifiActionListener("Discover services"));
         } else {
-            mHandler.post(this);
             mContext.registerReceiver(mReceiver, mIntentFilter);
-            mManager.discoverPeers(mChannel, mActionListener);
+            mManager.discoverPeers(mChannel, new WifiActionListener("Discover peers"));
         }
         mState = DISCOVERING;
-        Log.d(TAG, "Discovery started.");
     }
 
     public void stopDiscovering(){
         if(mServiceIsRegistered){
-            mManager.removeServiceRequest(mChannel, serviceRequest, mActionListener);
+            mManager.removeServiceRequest(
+                    mChannel, serviceRequest, new WifiActionListener("Remove service request"));
         } else {
-            mManager.stopPeerDiscovery(mChannel, mActionListener);
+            mManager.stopPeerDiscovery(mChannel, new WifiActionListener("Stop peer discovery"));
         }
-        mHandler.removeCallbacks(this);
         mContext.unregisterReceiver(mReceiver);
         mState = STOPPED;
     }
@@ -139,23 +125,5 @@ public class WifiController implements
     public void onDnsSdTxtRecordAvailable(String fullDomainName, Map<String, String> txtRecordMap, WifiP2pDevice srcDevice) {
         Log.d(TAG, "DnsSdTxtRecord available -" + txtRecordMap.toString());
         buddies.put(srcDevice.deviceAddress, txtRecordMap.get("buddyname").toString());
-    }
-
-    @Override
-    public void onPeersAvailable(WifiP2pDeviceList peers) {
-        Log.d("PEERS", "Peers available");
-        if(peers.getDeviceList().size() != 0 && !peers.equals(mPeers)){
-            mPeers = peers;
-        }
-    }
-
-    @Override
-    public void run() {
-        if(mState!=STOPPED){
-            if(mPeers!=null){
-                mPeerAdapter.setList(mPeers);
-            }
-            mHandler.postDelayed(this, SCANINTERVAL);
-        }
     }
 }

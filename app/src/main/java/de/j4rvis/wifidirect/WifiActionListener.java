@@ -1,6 +1,5 @@
 package de.j4rvis.wifidirect;
 
-import android.content.Context;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
@@ -9,26 +8,26 @@ import android.util.Log;
  */
 public class WifiActionListener implements WifiP2pManager.ActionListener {
 
-    private static String TAG = null;
+    private String mMessage;
 
-    public WifiActionListener(Context context) {
-        TAG = context.getClass().getName();
+    public WifiActionListener(String message) {
+        mMessage = message;
     }
 
     @Override
     public void onSuccess() {
-        Log.d(TAG, "SUCCESS");
+        Log.d("ACTIONLISTENER", mMessage + " initiated.");
     }
 
     @Override
     public void onFailure(int reason) {
-        Log.d(TAG, "FAILURE");
+        Log.d("ACTIONLISTENER", mMessage + " failed.");
         if(reason == WifiP2pManager.P2P_UNSUPPORTED){
-            Log.d(TAG, "Wi-Fi P2P isn't supported on the device running the app.");
+            Log.d("ACTIONLISTENER", "Wi-Fi P2P isn't supported on the device running the app.");
         } else if(reason == WifiP2pManager.BUSY){
-            Log.d(TAG, "The system is to busy to process the request.");
+            Log.d("ACTIONLISTENER", "The system is to busy to process the request.");
         } else if(reason == WifiP2pManager.ERROR){
-            Log.d(TAG, "The operation failed due to an internal error.");
+            Log.d("ACTIONLISTENER", "The operation failed due to an internal error.");
         }
     }
 }
