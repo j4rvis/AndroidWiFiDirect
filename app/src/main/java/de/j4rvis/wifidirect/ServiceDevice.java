@@ -16,4 +16,16 @@ public class ServiceDevice {
         mInstanceName = instanceName;
         mRegistrationType = registrationType;
     }
+
+    public WifiP2pDevice getDevice() {
+        return mDevice;
+    }
+
+    public String getInstanceName() {
+        return mInstanceName;
+    }
+
+    public String getRegistrationType() {
+        return mRegistrationType;
+    }
 }

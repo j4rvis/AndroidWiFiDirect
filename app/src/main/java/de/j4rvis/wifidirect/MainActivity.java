@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity
         WifiP2pManager.DnsSdTxtRecordListener, WifiP2pManager.DnsSdServiceResponseListener {
 
     final static String TAG = MainActivity.class.getName();
-    final static int SERVER_PORT = 0;
+    final static int SERVER_PORT = 4545;
 
     WifiP2pManager mManager;
     WifiP2pManager.Channel mChannel;
@@ -37,7 +37,8 @@ public class MainActivity extends AppCompatActivity
     IntentFilter mIntentFilter;
     WifiActionListener mActionListener;
     ListView mPeerListView;
-    PeerAdapter mPeerAdapter;
+    ListView mServiceListView;
+    ServiceAdapter mServiceAdapter;
     WifiP2pDeviceList mPeers;
     Handler mHandler;
 
@@ -56,15 +57,19 @@ public class MainActivity extends AppCompatActivity
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
 //            @Override
-//            public void onClick(View view) {
+//            public void onClick(primaryDeviceTypeView view) {
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
 //            }
 //        });
 
-        mPeerListView = (ListView) findViewById(R.id.peerListView);
-        mPeerAdapter = new PeerAdapter(this);
-        mPeerListView.setAdapter(mPeerAdapter);
+//        mPeerListView = (ListView) findViewById(R.id.peerListView);
+//        mPeerAdapter = new PeerAdapter(this);
+//        mPeerListView.setAdapter(mPeerAdapter);
+
+        mServiceListView = (ListView) findViewById(R.id.peerListView);
+        mServiceAdapter = new ServiceAdapter(this);
+        mServiceListView.setAdapter(mServiceAdapter);
 
         mActionListener = new WifiActionListener(this);
         mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
@@ -77,10 +82,10 @@ public class MainActivity extends AppCompatActivity
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-//        startRegistration();
+        startRegistration();
 
-        mHandler = new Handler();
-        mHandler.post(this);
+//        mHandler = new Handler();
+//        mHandler.post(this);
     }
 
     /* register the broadcast receiver with the intent values to be matched */
@@ -88,7 +93,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         registerReceiver(mReceiver, mIntentFilter);
-        mManager.discoverPeers(mChannel, mActionListener);
+//        mManager.discoverPeers(mChannel, mActionListener);
     }
     /* unregister the broadcast receiver */
     @Override
@@ -99,17 +104,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPeersAvailable(WifiP2pDeviceList peers) {
-        Log.d("PEERS", "Peers available");
-        if(peers.getDeviceList().size() != 0 && !peers.equals(mPeers)){
-            mPeers = peers;
-        }
+//        Log.d("PEERS", "Peers available");
+//        if(peers.getDeviceList().size() != 0 && !peers.equals(mPeers)){
+//            mPeers = peers;
+//        }
     }
 
     @Override
     public void run() {
-        if(mPeers!=null){
-            mPeerAdapter.setList(mPeers);
-        }
+//        if(mPeers!=null){
+//            mPeerAdapter.setList(mPeers);
+//        }
         mHandler.postDelayed(this, 1000);
     }
 
@@ -147,18 +152,20 @@ public class MainActivity extends AppCompatActivity
             String fullDomainName, Map<String, String> txtRecordMap, WifiP2pDevice srcDevice) {
 
         Log.d(TAG, "DnsSdTxtRecord available -" + txtRecordMap.toString());
-        buddies.put(srcDevice.deviceAddress, txtRecordMap.get("buddyname").toString());
+        buddies.put(srcDevice.deviceAddress, txtRecordMap.get("buddyname"));
     }
 
     @Override
     public void onDnsSdServiceAvailable(String instanceName, String registrationType, WifiP2pDevice srcDevice) {
+        Log.d(TAG, "onServiceAvailable");
         // Update the device name with the human-friendly version from
         // the DnsTxtRecord, assuming one arrived.
         srcDevice.deviceName = buddies
                 .containsKey(srcDevice.deviceAddress) ? buddies
                 .get(srcDevice.deviceAddress) : srcDevice.deviceName;
+        mServiceAdapter.add(new ServiceDevice(srcDevice,instanceName, registrationType));
 
-        Log.d(TAG, instanceName+"_"+registrationType+"_"+srcDevice.toString());
+//        Log.d(TAG, instanceName+"_"+registrationType+"_"+srcDevice.toString());
         // Add to the custom adapter defined specifically for showing
         // wifi devices.
 //        WiFiDirectServicesList fragment = (WiFiDirectServicesList) getFragmentManager()
@@ -168,6 +175,5 @@ public class MainActivity extends AppCompatActivity
 //
 //        adapter.add(resourceType);
 //        adapter.notifyDataSetChanged();
-        Log.d(TAG, "onBonjourServiceAvailable " + instanceName);
     }
 }
