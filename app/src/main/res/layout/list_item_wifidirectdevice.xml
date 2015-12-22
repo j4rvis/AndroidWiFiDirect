@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2">
+
+        <TextView
+            android:id="@+id/textViewDeviceAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Address"/>
+
+        <TextView
+            android:id="@+id/textViewDeviceName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Name"/>
+
+
+        <TextView
+            android:id="@+id/textViewDeviceStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Status"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/textViewDeviceIsGroupOwner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="isGroupOwner"/>
+
+        <TextView
+            android:id="@+id/textViewDeviceIsServiceDiscoverCapable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="isCapable"/>
+
+
+        <TextView
+            android:id="@+id/textViewDevicePrimeType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="PrimeType"/>
+
+        <TextView
+            android:id="@+id/textViewDeviceSecType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SecType"/>
+    </LinearLayout>
+
+</LinearLayout>
