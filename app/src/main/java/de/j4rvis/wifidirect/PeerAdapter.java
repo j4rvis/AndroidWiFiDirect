@@ -43,6 +43,13 @@ public class PeerAdapter extends BaseAdapter {
         return 0;
     }
 
+    public void add(WifiP2pDevice device){
+        if(!mDeviceList.contains(device)){
+            mDeviceList.add(device);
+            notifyDataSetChanged();
+        }
+    }
+
     public void setList(WifiP2pDeviceList devices){
         Iterator iterator = devices.getDeviceList().iterator();
         mDeviceList.clear();

@@ -16,8 +16,7 @@ import java.util.Map;
  * Created by micha on 22.12.15.
  */
 public class WifiController implements
-        WifiP2pManager.DnsSdTxtRecordListener,
-        WifiP2pManager.DnsSdServiceResponseListener {
+        WifiP2pManager.DnsSdTxtRecordListener {
 
     public final static int DISCOVERING = 0;
     public final static int STOPPED = 1;
@@ -35,7 +34,7 @@ public class WifiController implements
     BroadcastReceiver mReceiver;
     IntentFilter mIntentFilter;
 
-    final HashMap<String, String> buddies = new HashMap<String, String>();
+    final static HashMap<String, String> buddies = new HashMap<String, String>();
     WifiP2pManager.DnsSdTxtRecordListener mTxtListener;
     WifiP2pManager.DnsSdServiceResponseListener mServListener;
     private WifiP2pDnsSdServiceRequest serviceRequest;
@@ -58,7 +57,7 @@ public class WifiController implements
 
     public void registerService(){
 
-        Map record = new HashMap();
+        Map<String, String> record = new HashMap();
         record.put("listenport", String.valueOf(SERVER_PORT));
         record.put("buddyname", "User" + (int) (Math.random() * 1000));
         record.put("available", "visible");
@@ -68,7 +67,8 @@ public class WifiController implements
 
         mManager.addLocalService(mChannel, serviceInfo, new WifiActionListener("Add Local Service"));
 
-        mManager.setDnsSdResponseListeners(mChannel, this, this);
+//        mManager.setDnsSdResponseListeners(mChannel, this, this);
+        mManager.setDnsSdResponseListeners(mChannel, mActivity, this);
         serviceRequest = WifiP2pDnsSdServiceRequest.newInstance();
 
         mServiceIsRegistered = true;
@@ -94,7 +94,6 @@ public class WifiController implements
         } else {
             mManager.stopPeerDiscovery(mChannel, new WifiActionListener("Stop peer discovery"));
         }
-        mContext.unregisterReceiver(mReceiver);
         mState = STOPPED;
     }
 
@@ -107,18 +106,6 @@ public class WifiController implements
 
     public int getState() {
         return mState;
-    }
-
-    @Override
-    public void onDnsSdServiceAvailable(
-            String instanceName, String registrationType, WifiP2pDevice srcDevice) {
-
-        srcDevice.deviceName = buddies
-                .containsKey(srcDevice.deviceAddress) ? buddies
-                .get(srcDevice.deviceAddress) : srcDevice.deviceName;
-
-        Log.d(TAG, instanceName+"_"+registrationType+"_"+srcDevice.toString());
-        Log.d(TAG, "onBonjourServiceAvailable " + instanceName);
     }
 
     @Override
