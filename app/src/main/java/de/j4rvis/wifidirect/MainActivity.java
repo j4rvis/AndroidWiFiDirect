@@ -1,5 +1,6 @@
 package de.j4rvis.wifidirect;
 
+import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -10,6 +11,8 @@ import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Map;
 
@@ -23,6 +26,20 @@ public class MainActivity extends AppCompatActivity
     PeerAdapter mPeerAdapter;
     WifiController mController;
     Switch wifiSwitch;
+    Context mContext = this;
+    CompoundButton.OnCheckedChangeListener mSwitchListener = new CompoundButton.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            if (isChecked){
+                Toast.makeText(mContext, "Start discovering...", Toast.LENGTH_SHORT).show();
+                mController.startDiscovering();
+            } else {
+                mPeerAdapter.clearList();
+                Toast.makeText(mContext, "Stop discovering.", Toast.LENGTH_SHORT).show();
+                mController.stopDiscovering();
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,28 +54,18 @@ public class MainActivity extends AppCompatActivity
         mPeerListView.setAdapter(mPeerAdapter);
 
         mController = new WifiController(this, this);
-        mController.registerService();
+//        mController.registerService();
+
+        TextView deviceAddress = (TextView) findViewById(R.id.deviceAddress);
+        deviceAddress.setText(mController.getMACAddress());
 
         wifiSwitch.setChecked(false);
-
-        wifiSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    mController.startDiscovering();
-                } else {
-                    mController.stopDiscovering();
-                }
-            }
-        });
+        wifiSwitch.setOnCheckedChangeListener(mSwitchListener);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-//        if(wifiSwitch.isChecked()){
-//        mController.startDiscovering();
-//        }
     }
 
     @Override
@@ -69,6 +76,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPeersAvailable(WifiP2pDeviceList peers) {
+
+        Toast.makeText(mContext, peers.getDeviceList().size() + " Peer(s) found.", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Peers available");
         if(peers.getDeviceList().size() != 0){
             mPeerAdapter.setList(peers);

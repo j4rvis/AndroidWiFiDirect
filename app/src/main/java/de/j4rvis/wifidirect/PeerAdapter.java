@@ -60,6 +60,11 @@ public class PeerAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public void clearList(){
+        mDeviceList.clear();
+        notifyDataSetChanged();
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         WifiP2pDevice device = getItem(position);
