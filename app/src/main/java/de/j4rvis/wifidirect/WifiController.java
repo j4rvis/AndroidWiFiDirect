@@ -8,6 +8,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
+import android.os.Handler;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -36,6 +37,8 @@ public class WifiController extends BroadcastReceiver implements
     WifiP2pManager mManager;
     WifiP2pManager.Channel mChannel;
     IntentFilter mIntentFilter;
+    Handler mHandler;
+    Runnable mThread;
 
     final static HashMap<String, String> buddies = new HashMap<>();
     private WifiP2pDnsSdServiceRequest serviceRequest;
@@ -45,6 +48,7 @@ public class WifiController extends BroadcastReceiver implements
         mContext = context;
         mActivity = activity;
         mState = INITIALIZED;
+        mHandler = new Handler();
 
         mManager = (WifiP2pManager) mContext.getSystemService(Context.WIFI_P2P_SERVICE);
         mChannel = mManager.initialize(mContext, mContext.getMainLooper(), null);
@@ -53,14 +57,37 @@ public class WifiController extends BroadcastReceiver implements
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+
+        mThread = new Runnable() {
+            public void run() {
+                mManager.removeServiceRequest(
+                        mChannel, serviceRequest, new WifiActionListener("Remove service request"));
+                mManager.addServiceRequest(
+                        mChannel, serviceRequest, new WifiActionListener("Add service request"));
+
+                mManager.discoverServices(mChannel, new WifiActionListener("Discover services"));
+                mHandler.postDelayed(this, 10000);
+            }
+        };
     }
 
     public void registerService(){
 
         Map<String, String> record = new HashMap();
-        record.put("listenport", String.valueOf(SERVER_PORT));
-        record.put("buddyname", "User" + (int) (Math.random() * 1000));
-        record.put("available", "visible");
+        record.put("test", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|---10----|---11----|---12----|---13----|---14----|---15----|---16----|---17----|---18----|---19----|---20----|---21----|---22----|---23----|---24----|---25");
+//        record.put("test1", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|");
+        record.put("test2", getMACAddress());
+//        record.put("test2", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|");
+//        record.put("test3", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|");
+//        record.put("test4", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|");
+//        record.put("test5", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|");
+//        record.put("test6", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|");
+//        record.put("test7", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|");
+//        record.put("test8", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|");
+//        record.put("test9", "----|----1----|----2----|----3----|----4----|----5----|----6----|----7----|----8----|----9----|");
+//        record.put("listenport", String.valueOf(SERVER_PORT));
+//        record.put("buddyname", "User" + (int) (Math.random() * 1000));
+//        record.put("available", "visible");
 
         WifiP2pDnsSdServiceInfo serviceInfo =
                 WifiP2pDnsSdServiceInfo.newInstance("_shark", "_presence._tcp", record);
@@ -76,9 +103,7 @@ public class WifiController extends BroadcastReceiver implements
 
     public void startDiscovering(){
         if(mServiceIsRegistered){
-            mManager.addServiceRequest(
-                    mChannel, serviceRequest, new WifiActionListener("Add service request"));
-            mManager.discoverServices(mChannel, new WifiActionListener("Discover services"));
+            mHandler.post(mThread);
         } else {
             mContext.registerReceiver(this, mIntentFilter);
             mManager.discoverPeers(mChannel, new WifiActionListener("Discover peers"));
@@ -89,6 +114,7 @@ public class WifiController extends BroadcastReceiver implements
     public void stopDiscovering(){
         if(isDiscovering()){
             if(mServiceIsRegistered){
+                mHandler.removeCallbacks(mThread);
                 mManager.removeServiceRequest(
                         mChannel, serviceRequest, new WifiActionListener("Remove service request"));
             } else {
@@ -125,7 +151,7 @@ public class WifiController extends BroadcastReceiver implements
     @Override
     public void onDnsSdTxtRecordAvailable(String fullDomainName, Map<String, String> txtRecordMap, WifiP2pDevice srcDevice) {
         Log.d(TAG, "DnsSdTxtRecord available -" + txtRecordMap.toString());
-        buddies.put(srcDevice.deviceAddress, txtRecordMap.get("buddyname").toString());
+//        buddies.put(srcDevice.deviceAddress, txtRecordMap.get("buddyname").toString());
     }
 
     @Override
@@ -143,7 +169,7 @@ public class WifiController extends BroadcastReceiver implements
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
             // Call WifiP2pManager.requestPeers() to get a list of current peers
             if (mManager != null) {
-                mManager.requestPeers(mChannel, mActivity);
+//                mManager.requestPeers(mChannel, mActivity);
             }
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             // Respond to new connection or disconnections
